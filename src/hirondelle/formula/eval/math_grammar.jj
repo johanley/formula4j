@@ -1,0 +1,91 @@
+/**
+* This file defines a grammar for evaluating mathematical expressions.
+* It is to be used with JavaCC.
+* Generate :
+*    javacc math_grammar.jj
+* Compile (default package!):
+*   javac *.java
+* Run:
+*   java MathematicalExpression
+*   
+*/
+
+options {
+  /* override default values here */
+  STATIC = false; 
+}
+
+PARSER_BEGIN(MathematicalExpression)
+  package hirondelle.formula.eval;
+  
+  import java.io.*;
+  
+  public final class MathematicalExpression {
+    //disposable test harness...
+    public static void main(String args[]) throws ParseException {
+    }
+    
+    public MathematicalExpression(String aText){
+      this(new BufferedReader(new StringReader(aText)));
+    }
+  }
+PARSER_END(MathematicalExpression)
+
+// TOKENS:
+
+SKIP: {
+  <WHITESPACE:  ("\t"|"\n"|"\r"|"\f"| " ")+ >  
+}
+
+
+TOKEN : {
+  < NUMBER: 
+    <INTEGER> | <FLOATING_POINT> 
+  >
+|
+  < #INTEGER: ["1"-"9"] (["0"-"9"])* >
+|
+  < #FLOATING_POINT:
+      (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? 
+      | "." (["0"-"9"])+ (<EXPONENT>)? 
+      | (["0"-"9"])+ (<EXPONENT>)? 
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+}
+
+TOKEN : {
+  < OPEN: "(" > | 
+  < CLOSE: ")" >  
+}
+
+//LATER - FUNCTIONS sin, exp, etc.
+
+// SYNTAX :
+
+
+void AdditiveExpression() :{
+  System.out.println("Add");
+  int result = 0;
+  int other = 0;
+}{
+  result=MultiplicativeExpression()                    {System.out.println(" Using res of mult " + result);} 
+  ( ( "+" | "-" ) other=MultiplicativeExpression()  {result = result + other;} )* 
+  <EOF>
+                                                                 {System.out.println(" Result of add " + result);}
+}
+
+int MultiplicativeExpression() :{
+  System.out.println("Mult");
+  int result = 0;
+}
+{
+  <NUMBER>                            {result = Integer.valueOf(token.image);} 
+  ( ( "*" | "/" | "%" ) <NUMBER>  {result = result * Integer.valueOf(token.image);})*
+                                            {System.out.println(" result " + result); return result;}
+}
+
+
+
+
+

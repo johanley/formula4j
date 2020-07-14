@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <meta name="keywords" content="java, formula, parse, math expressions, mathematical expressions, evaluate mathematical expressions">
+ <meta name="description" content="Extensible Java API - parse and evaluate formulas and mathematical expressions">
+ <meta name="viewport" content="width=device-width"> 
+ <title>Formula4J Examples - Java API - parse formulas and mathematical expressions</title>
+ <link rel="stylesheet" type="text/css" href="css/stylesheet16.css" media="all"> 
+ <link rel="shortcut icon" href="images/favicon.ico" type="image/vnd.microsoft.icon">
+</head>
+
+<body>
+
+
+<P class='logo'><img style='vertical-align: middle;' src='images/formula.png' height='46' width='69'> Formula4J</P>
+
+<div class='menu'>
+  <P style='margin-bottom:0; margin-top:0.25em;'>
+  <a href='index.html' title='Formula4J Home Page'>Home</a>
+  <a href='examples.html' title='Example code'>Examples</a>
+  <a href='javadoc/index.html' title='Javadoc'>Javadoc</a>
+ </div>
+
+<P>
+Here are some code snippets demonstrating Formula4J's API.
+These examples use hard-coded values, which is artificial.
+In general, variable values will almost always come from your application's data.
+
+
+<P><b>Basic Math</b>
+<PRE><a href='javadoc/hirondelle/formula/Formula.html'>Formula</a> formula = new Formula("3.5 * (6 + 3)");
+<a href='javadoc/hirondelle/formula/Decimal.html'>Decimal</a> answer = formula.getAnswer(); //31.5</PRE>
+
+<P><b>Use Some Built-in Functions</b>
+<pre><a href='javadoc/hirondelle/formula/Formula.html'>Formula</a> formula = new Formula("sqrt(floor(9.5))");
+<a href='javadoc/hirondelle/formula/Decimal.html'>Decimal</a> answer = formula.getAnswer(); // 3.0
+    
+formula = new Formula("median(2,5,3,6)");
+answer = formula.getAnswer(); // 4
+    
+formula = new Formula("max(2,6,3,5)");
+answer = formula.getAnswer(); // 6
+    
+formula = new Formula("daysbetween(2012,12,25,  2013,12,25)");
+answer = formula.getAnswer(); // 365.0
+    
+formula = new Formula("sin(0.5)");
+answer = formula.getAnswer(); // 0.479425538604203
+</pre>
+
+<P><b>Populate Variable Values</b>
+<pre>//formulas usually have variables 
+//this is the most common use case
+Map&lt;String, Decimal&gt; variables = new LinkedHashMap&lt;String, Decimal&gt;();
+variables.put("a", Decimal.from(7));
+variables.put("b10", Decimal.from(-6));
+
+//note the different constructor used here, passing in the variable map:
+<a href='javadoc/hirondelle/formula/Formula.html'>Formula</a> formula = new Formula("2 + a + b10", variables);
+<a href='javadoc/hirondelle/formula/Decimal.html'>Decimal</a> answer = formula.getAnswer(); //3
+</pre>
+
+
+<P><b>List Functions and Variables in a Formula</b>
+<pre><a href='javadoc/hirondelle/formula/Formula.html'>Formula</a> formula = new Formula("sqrt(floor(9.5))");
+List&lt;String&gt; functionNames = formula.getFunctionNames()); //[sqrt, floor]
+  
+formula = new Formula("2 + a + b10");
+varNames = formula.getVariableNames()); // [a, b10]
+</pre>
+
+
+<P><b>Define a Custom Function in Text</b>
+<pre>//start with the default function map;
+//it maps the name of the function, as it 
+//appears in a formula, to an underlying class
+Map&lt;String, Function&gt; customFunctions = Formula.<a href='javadoc/hirondelle/formula/Formula.html#getDefaultFunctions()'>getDefaultFunctions</a>();
+
+//add a new entry to the function map
+<a href='javadoc/hirondelle/formula/function/Function.html'>Function</a> bmi = new <a href='javadoc/hirondelle/formula/function/FunctionDefinedInText.html'>FunctionDefinedInText</a>("bmi(m,h) = m/h^2");
+customFunctions.put("bmi", bmi);
+
+//some variable values
+Map&lt;String, Decimal&gt; variables = new LinkedHashMap&lt;String, Decimal&gt;(); 
+variables.put("m", Decimal.from(64));
+variables.put("h", Decimal.from(8));
+
+//use the new function as part of an expression
+//this constructor takes 3 items 
+<a href='javadoc/hirondelle/formula/Formula.html'>Formula</a> formula = new Formula("5 * bmi(m,h)", variables, customFunctions);
+<a href='javadoc/hirondelle/formula/Decimal.html'>Decimal</a> answer = formula.getAnswer(); // 5
+</pre>
+
+
+
+<P><b>Define a Custom Function in Code</b>
+<pre>//the custom function class
+class Bmi implements <a href='javadoc/hirondelle/formula/function/Function.html'>Function</a> {
+  public Decimal calculate(Decimal... aArgs) {
+    Check.numArgs(2, aArgs);
+    Decimal mass = aArgs[0]; 
+    Decimal height = aArgs[1]; 
+    return mass.div(height.pow(2));
+  }
+}
+
+...
+
+//start with the default function map;
+//it maps the name of the function, as it 
+//appears in a formula, to an underlying class
+Map&lt;String, Function&gt; customFunctions = Formula.<a href='javadoc/hirondelle/formula/Formula.html#getDefaultFunctions()'>getDefaultFunctions</a>();
+
+//add a new entry to the function map
+<a href='javadoc/hirondelle/formula/function/Function.html'>Function</a> bmi = new Bmi(); //the class above
+customFunctions.put("bmi", bmi);
+   
+//some variable values
+Map&lt;String, Decimal&gt; variables = new LinkedHashMap&lt;String, Decimal&gt;(); 
+variables.put("m", Decimal.from(64));
+variables.put("h", Decimal.from(8));
+
+//use the new function as part of an expression
+//this constructor takes 3 items 
+<a href='javadoc/hirondelle/formula/Formula.html'>Formula</a> formula = new Formula("5 * bmi(m,h)", variables, customFunctions);
+<a href='javadoc/hirondelle/formula/Decimal.html'>Decimal</a> answer = formula.getAnswer(); // 5
+</pre>
+
+
+<P><b>Change the Name of a Built-In Function</b>
+<pre>//start with the default function map
+Map&lt;String, Function&gt; customFunctions = Formula.<a href='javadoc/hirondelle/formula/Formula.html#getDefaultFunctions()'>getDefaultFunctions</a>();
+
+//change 'sin' to 'sine'
+//first get a reference to the function object itself
+<a href='javadoc/hirondelle/formula/function/Function.html'>Function</a> sineFunction = customFunctions.get("sin");
+    
+//remove it from the map, then add it back in using the new name
+customFunctions.remove(sineFunction);    
+customFunctions.put("sine", sineFunction);
+//this technique also lets you translate built-in 
+//function names into different languages
+
+//some variable values
+Map&lt;String, Decimal&gt; variables = new LinkedHashMap&lt;String, Decimal&gt;(); 
+variables.put("x", Decimal.from(0.5));
+    
+<a href='javadoc/hirondelle/formula/Formula.html'>Formula</a> formula = new Formula("sine(x)", variables, customFunctions);
+<a href='javadoc/hirondelle/formula/Decimal.html'>Decimal</a> answer = formula.getAnswer(); // 0.479425538604203
+</pre>
+
+ 
+</body>
+</html>

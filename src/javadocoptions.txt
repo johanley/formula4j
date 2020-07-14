@@ -1,0 +1,19 @@
+javadoc
+-d C:\johanley\Projects\formula-website\javadoc
+-sourcepath C:\johanley\projects-java\formula-1.0.0\src
+-classpath C:\johanley\Libraries\junit3.8.1\junit.jar;
+-protected
+-source 1.5
+-encoding "UTF-8"
+-docencoding "UTF-8"
+-author
+-version
+-header "<b>Formula 1.0.0</b>"
+-bottom "Copyright Hirondelle Systems. Published January 31, 2013"
+-windowtitle "Formula4j Javadoc"
+-noqualifier java.*:javax.*:com.sun.*
+-stylesheetfile C:\johanley\projects-java\formula-1.0.0\highlight.css
+-overview C:\johanley\projects-java\formula-1.0.0\src\overview.html
+-quiet
+-link http://docs.oracle.com/javase/7/docs/api/
+-link http://docs.oracle.com/javaee/5/api/

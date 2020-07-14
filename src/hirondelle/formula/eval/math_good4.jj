@@ -1,0 +1,308 @@
+/**
+* This file defines a grammar for evaluating mathematical expressions.
+* It is to be used with JavaCC.
+* Based on this example:
+* http://www.singularsys.com/jep/doc/html/grammar.html
+* I altered the definition of MultiplicativeExpression, and removed the PowerExpression; it didn't make any sense to me.
+*/
+
+options {
+  /* override default values here */
+  STATIC = false;
+  DEBUG_PARSER = false; 
+  JDK_VERSION = "1.5";
+  GRAMMAR_ENCODING = "UTF-8";
+  JAVA_UNICODE_ESCAPE = true;
+  SUPPORT_CLASS_VISIBILITY_PUBLIC = true;
+}
+
+PARSER_BEGIN(MathematicalExpression)
+  package hirondelle.formula.eval;
+  
+  import java.io.*;
+  import java.util.*;
+  import hirondelle.formula.function.Function;
+  import hirondelle.formula.Decimal;
+  import hirondelle.formula.UnpopulatedVariableException;
+  import hirondelle.formula.UnknownFunctionException;
+  import java.math.BigDecimal;
+  
+      
+  public final class MathematicalExpression {
+  
+    public MathematicalExpression(String aText){
+      this(new BufferedReader(new StringReader(aText)));
+    }
+    
+    public void setVariables(Map<String, Decimal> aVariables){
+      fVariables = aVariables;
+    }
+    
+    public void setFunctions(Map<String, Function> aFunctions){
+      fFunctions = aFunctions;
+    }
+
+    // PRIVATE
+    
+    private Map<String, Decimal> fVariables = new LinkedHashMap<String, Decimal>();
+    private Map<String, Function> fFunctions = new LinkedHashMap<String, Function>();
+       
+    private void log(String aMsg){
+       System.out.println(aMsg);
+    }
+    
+    private Decimal num(String aToken){
+      return new Decimal(new BigDecimal(aToken));
+    }
+
+    private Decimal constant(String aToken){
+      Decimal result = null;
+      if ("e".equalsIgnoreCase(aToken)){
+        result = Decimal.E;
+      }
+      else if ("\u03C0".equalsIgnoreCase(aToken) ||  "pi".equalsIgnoreCase(aToken)){
+        result = Decimal.PI;
+      }
+      return result;
+    }
+    
+    private Decimal variable(String aToken) {
+      Decimal result = fVariables.get(aToken);
+      //this is a defensive block only; the Formula class already 
+      //checks for unpopulated items at a higher level in the call stack
+      if (result == null) {
+        throw new UnpopulatedVariableException(aToken);
+      }
+      return result;
+    }
+    
+    /** 
+     Not the best: coerces the power to an integer.
+     Instead, this should be defined as syntax, not in code.
+    */
+    private Decimal pow(Decimal aBase, Decimal aPower){
+      int a = aPower.abs().intValue(); //truncate to an integer
+      Decimal b = new Decimal(BigDecimal.valueOf(a));
+      if (aPower.abs().minus(b).gt(Decimal.ZERO)){
+        throw new IllegalArgumentException("Power must be integral: " + aPower);
+      }
+      return aBase.pow(aPower.intValue());       
+    }
+    
+    /** The remainder after division. */
+    private Decimal modulus(Decimal a, Decimal b){
+      return Decimal.from(a.intValue() % b.intValue());
+    }
+  }
+PARSER_END(MathematicalExpression)
+
+// TOKENS:
+
+SKIP: {
+  <WHITESPACE:  ("\t"|"\n"|"\r"|"\f"| " ")+ >  
+}
+
+TOKEN : {
+  < NUMBER: 
+    <INTEGER> | <FLOATING_POINT> 
+  >
+|
+  < #INTEGER: ["1"-"9"] (["0"-"9"])* >
+|
+  < #FLOATING_POINT:
+      (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? 
+      | "." (["0"-"9"])+ (<EXPONENT>)? 
+      | (["0"-"9"])+ (<EXPONENT>)? 
+  >
+|
+  < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+}
+
+//Longest token wins
+//If the length is the same, then the one that appears first here wins
+
+// Names of things:
+//Constant will match before Variable, in case of a tie in length, since it appears first here.
+
+// windows console: matches e, but sees \u03C0 as a variable!; \u03C0 matches ok from code only, 
+// without the console involved anywhere (code point 960 - good\code; code point 227 - bad\console)
+TOKEN : {
+  <CONSTANT:
+    <E> | <PI> 
+  >
+  |
+  <#E: "e" | "E"> 
+  | 
+  <#PI: ["\u03C0"] | "pi" | "PI">
+}
+
+//The open paren at the end of a Function distinguishes it from a Variable.
+// the spectrum of possible letters is very wide; allows for chars in other languages, without defining a bunch 
+// of specific unicode blocks
+TOKEN : {
+  <FUNCTION: <NAME>["("]>
+  |
+  <VARIABLE: <NAME> > 
+  |
+  <#NAME: <LETTER>(<LETTER>|["0"-"9"])* >
+  |
+  <#LETTER: ~[ "0"-"9", "(", ")", "," ,"+", "-", "*", "/", "^", "%", " ",   "~", "`", "!", "#", "?", "=", "|", "\\"]>
+}
+
+TOKEN : {
+  < LRND: "(" > | 
+  < RRND: ")" >  |
+  < COMMA: "," >  
+}
+
+TOKEN : {
+  < PLUS: "+" > | 
+  < MINUS: "-" > |  
+  < MUL: "*" > | 
+  < DIV: "/" > |  
+  < POW: "^" > |  
+  < MOD: "%" >  
+}
+
+// SYNTAX :
+
+Decimal Start() :{
+  Decimal result = Decimal.ZERO;
+} {
+  result=Expression()
+  <EOF>
+  {return result;} 
+}
+
+Decimal Expression() :{
+  Decimal result = Decimal.ZERO;
+} {
+  result=AdditiveExpression()
+  {return result;}
+}
+
+Decimal AdditiveExpression() :{
+  Decimal result = Decimal.ZERO;
+  Decimal a = Decimal.ZERO;
+  Decimal b = Decimal.ZERO;
+} {
+  a=MultiplicativeExpression()
+  {result = a;} 
+  ( 
+    <PLUS> b=MultiplicativeExpression()
+    {result = result.plus(b);} 
+    | 
+    <MINUS> b=MultiplicativeExpression() 
+    {result = result.minus(b);} 
+  )*
+  {return result;}
+}
+
+Decimal MultiplicativeExpression()	: {
+  Decimal result = Decimal.ZERO;
+  Decimal a = Decimal.ZERO;
+  Decimal b = Decimal.ZERO;
+} { 	
+  a=UnaryExpression()
+  {result = a;}
+  ( 
+    <MUL> b=UnaryExpression()
+    {result = result.times(b);}  
+    | 
+    <DIV> b=UnaryExpression()
+    {result = result.div(b);}
+    |
+    <MOD> b=UnaryExpression()
+    {result = modulus(a,b);}   
+  )*
+  {return result;}
+}
+
+Decimal UnaryExpression() 	: {
+  Decimal result = Decimal.ZERO;
+  Decimal plus = Decimal.ZERO;
+  Decimal minus = Decimal.ZERO;
+  Decimal power = Decimal.ZERO;
+} {
+	(
+	<PLUS> plus=UnaryExpression()
+  {result = plus;}  
+	| 	
+	<MINUS> minus=UnaryExpression() 
+  {result = minus.times(Decimal.MINUS_ONE);}  
+	|	 	
+	power=PowerExpression()
+	{result = power;}
+	)
+	{return result;}
+}
+
+Decimal PowerExpression() 	: {
+  Decimal result = Decimal.ZERO;
+  Decimal base = Decimal.ZERO;
+  Decimal power = Decimal.ZERO;
+} {
+  base=UnaryExpressionNotPlusMinus() 
+  {result = base;} 
+  ( 
+    <POW> power=UnaryExpression() 
+    {result = pow(base, power);} 
+  )?
+	{return result;}
+}
+
+Decimal UnaryExpressionNotPlusMinus() 	: {
+  Decimal result = Decimal.ZERO;
+} {
+  (
+	  <NUMBER>
+	  {result = num(token.image);}
+	  | 	
+	  <CONSTANT>
+	  {result = constant(token.image);}
+	  |
+	  <VARIABLE>
+	  { result = variable(token.image); }
+	  | 	
+	  result=Function()	 
+	  | 	
+	  <LRND> result=Expression() <RRND>
+	 )
+	{return result;}
+}
+
+//The open paren is buried in the FUNCTION token; note that it's chopped off here
+Decimal Function() 	: {
+  String name = "";
+  List<Decimal> args;
+  Decimal result = Decimal.ZERO;
+} {
+   <FUNCTION>
+   {name = token.image.substring(0,token.image.length()-1);} 
+   args=ArgumentList() 
+   <RRND> 
+   {
+     Function function = fFunctions.get(name);
+     //this is defensive only; Formula will have already checked for this
+     if (function == null){
+       throw new UnknownFunctionException(name);
+     }
+     result = function.calculate(args.toArray(new Decimal[0]));
+     return result;
+   }
+}
+
+List<Decimal> ArgumentList() 	: {
+  List<Decimal> result = new ArrayList<Decimal>();
+  Decimal expr = Decimal.ZERO;
+} {
+  ( 
+    expr=Expression()
+    { result.add(expr); } 
+    ( 
+     <COMMA> expr=Expression()
+     {result.add(expr);} 
+    )* 
+  )?
+  {return result;}
+}

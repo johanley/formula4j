@@ -1,0 +1,65 @@
+
+This tool is a simple demonstration of how to input formulas, 
+evaluate them, and output their value.
+
+Example input :
+  2+3
+  5.51*16.1 - 10
+  (4^2 - 10) + 5.2
+  abs(-90) + max(12.5, 3, -16.8)
+  sin(0.125) + tan(1.231)
+  round(132.5*1.2151)
+  ..and so on..
+
+As each line is evaluated, the system calculates and 
+displays the response time.
+
+---------------------------------------------------
+
+This tool also defines the following special commands. 
+
+:define <function-definition>
+Define a custom function on the fly.
+Example:
+  :define bmi(m,h) = m/h^2
+
+:set <variable-value>
+Defines a variable as a name-value pair.
+Defined variables can be referenced in formulas.
+Setting a variable a second time simply overwrites the value.
+Example:
+  :set a = 321.2
+
+:unset [<variable-name>]
+Remove a variable value. 
+If the variable name is omitted, then all variables are removed.
+  
+:stats
+Show timing statistics.
+
+:load <file-name>
+Load a file defining custom functions.
+The file name should be absolute, not relative.
+The file should be encoded in UTF-8.
+The file must contain content that looks like this:
+
+bmi(m,h) = m/h^2
+area(r) = 2 * π * r^2
+circum   my.package.Circumference
+
+There are two kinds of entries in these files:
+  - explicit functions (bmi and area)
+  - mapping of function names to implementation classes (circum)
+
+:unload
+Revert to the default set of functions, with 
+no customizations. Undoes both the :load and 
+the :define command.
+  
+:cls
+Clear the output area by removing all of its text.
+
+:help
+Show this help information.
+
+  

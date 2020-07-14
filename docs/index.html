@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <meta name="keywords" content="java, formula, parse, math expressions, mathematical expressions, evaluate mathematical expressions">
+ <meta name="description" content="Extensible Java API - parse and evaluate formulas and mathematical expressions">
+ <meta name="viewport" content="width=device-width"> 
+ <title>Formula4J - Java API - parse formulas and mathematical expressions</title>
+ <link rel="stylesheet" type="text/css" href="css/stylesheet16.css" media="all"> 
+ <link rel="shortcut icon" href="images/favicon.ico" type="image/vnd.microsoft.icon">
+</head>
+
+<body>
+
+<P class='logo'><img style='vertical-align: middle;' src='images/formula.png' height='46' width='69'> Formula4J</P>
+
+<div class='menu'>
+  <P style='margin-bottom:0; margin-top:0.25em;'>
+  <a href='index.html' title='Formula4J Home Page'>Home</a>
+  <a href='examples.html' title='Example code'>Examples</a>
+  <a href='javadoc/index.html' title='Javadoc'>Javadoc</a>
+ </div>
+
+ <P>
+ When an expression such as 
+<span class='formula'>B = m/h^2</span>
+is part of your program and never changes, then you can always implement the expression directly in code.
+For example, you can define a method that takes <em>m</em> and <em>h</em> as parameters, 
+does the math as ordinary hard-coded statements, and then finally returns the value <em>B</em> as a result.
+That's easy.
+
+<P><b>But what happens when the expression isn't known when the program is being written?</b> 
+That's not so easy, because now you need a general expression parser.
+In the simplest cases, or if you have enough time, you might build such a parser yourself.
+But you may prefer to use a tool that's already built, tested, and ready to use.
+Formula4j is such a tool.
+
+<P>The formula4j Java library has <b>three main benefits</b>:
+<ul>
+ <li><b>speed of development</b> - the API has a simple, straightforward design. It can be understood by any member of your team in a very short time.
+ <li><b>accuracy</b> - you avoid all rounding errors associated with <a href='http://www.javapractices.com/topic/TopicAction.do?Id=213'>floating-point data types</a>. Such rounding errors are unacceptable in a business context.
+ <li><b>security</b> - you avoid system security problems associated with general <a href='https://www.google.ca/search?q=eval+exploit'>eval() exploits</a> (a form of <a href="http://en.wikipedia.org/wiki/Code_injection">code injection</a>).
+ Formula4j parses its input using a grammar strictly limited to mathematical expressions.
+</ul>
+
+
+<P>Other important facts about formula4j:
+<ul>
+ <li>it gives you a JDK 5+ API for the run-time evaluation of basic mathematical expressions
+ <li>it <b>targets typical business applications</b>, and not scientific applications
+ <li>it lets you use functions and variables in your expressions
+ <li>it gives you 48 <a href='javadoc/hirondelle/formula/function/builtin/package-summary.html'>built-in, commonly used functions</a>
+ <li>it lets you <a href='javadoc/hirondelle/formula/function/Function.html'>define new functions in code</a>
+ <li>it lets you <a href='javadoc/hirondelle/formula/function/FunctionDefinedInText.html'>define new functions in plain text</a>, so <b>end users can extend your program without coding</b>
+ <li>it gives you <a href='javadoc/hirondelle/formula/Decimal.html'>Decimal, a better abstraction</a> than BigDecimal for most business apps
+ <li>it uses UTF-8, so you can use Greek letters such as &alpha;, &beta;, and so on, in your expressions
+ <li>it lets you change (or translate) the names of its built-in functions
+ <li>it depends on  <a href='https://javacc.github.io/javacc/'>javacc 5.0</a> and junit.jar (3.8.1)
+ <li>it includes a simple <a href='javadoc/hirondelle/formula/demo/package-summary.html'>demo application</a>
+</ul>
+
+<P>What formula4j does <em>not</em> give you:
+<ul>
+ <li>no string functions (sorry)
+ <li>no deep-level control over its internal parser
+ <li>no complex numbers, matrices, fancy-pants abstract algebra, and so on 
+</ul>
+
+ 
+</body>
+</html>
